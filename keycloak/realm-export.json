@@ -1,0 +1,68 @@
+{
+  "id": "sso-realm",
+  "realm": "sso-realm",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@mondomaine.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123"
+        }
+      ],
+      "realmRoles": ["admin", "user"]
+    },
+    {
+      "username": "user1",
+      "email": "user1@mondomaine.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user123"
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator"
+      },
+      {
+        "name": "user",
+        "description": "Standard User"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "portal-app",
+      "name": "Portail d'Applications",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "redirectUris": [
+        "https://portal.localhost/*"
+      ],
+      "webOrigins": [
+        "https://portal.localhost"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    }
+  ]
+}

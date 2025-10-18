@@ -1,0 +1,123 @@
+
+
+services:
+  # Reverse Proxy Traefik
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.myresolver.acme.tlschallenge=true
+      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/letsencrypt:/letsencrypt
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+    networks:
+      - sso-network
+    restart: unless-stopped
+
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: postgres-sso
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sso-network
+    restart: unless-stopped
+
+  # Serveur LDAP
+  openldap:
+    build: ./openldap
+    container_name: openldap
+    environment:
+      LDAP_DOMAIN: ${LDAP_DOMAIN}
+      LDAP_ORGANISATION: ${LDAP_ORGANISATION}
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD}
+      LDAP_TLS: "false"      # TLS désactivé
+      LDAP_NO_SSL: "true"    # Option supplémentaire pour désactiver SSL
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+
+    networks:
+      - sso-network
+    restart: unless-stopped
+
+  # Serveur SSO Keycloak
+  keycloak:
+    build: ./keycloak
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+    command:
+      - start
+      - --import-realm
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./keycloak/themes:/opt/keycloak/themes
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`${KEYCLOAK_HOSTNAME}`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls.certresolver=myresolver"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
+    depends_on:
+      - postgres
+      - openldap
+    networks:
+      - sso-network
+    restart: unless-stopped
+
+  # Portail d'applications
+  portal-app:
+    build: ./portal-app
+    container_name: portal-app
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portal-app.rule=Host(`${PORTAL_HOSTNAME}`)"
+      - "traefik.http.routers.portal-app.entrypoints=websecure"
+      - "traefik.http.routers.portal-app.tls.certresolver=myresolver"
+      - "traefik.http.services.portal-app.loadbalancer.server.port=3000"
+    depends_on:
+      - keycloak
+    networks:
+      - sso-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  ldap_data:
+  ldap_config:
+
+networks:
+  sso-network:
+    driver: bridge

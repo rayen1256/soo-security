@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .header { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 1rem 2rem; 
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        .btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+            font-weight: 500;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .main { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .welcome { 
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem; 
+            border-radius: 15px; 
+            margin-bottom: 2rem; 
+            text-align: center;
+        }
+        .category-section { margin-bottom: 3rem; }
+        .category-title { color: white; margin-bottom: 1.5rem; font-size: 1.5rem; }
+        .apps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .app-card { 
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px; 
+            padding: 1.5rem; 
+            transition: all 0.3s ease;
+        }
+        .app-card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Portail des Technologies</h1>
+        <div class="user-info">
+            <span>Bonjour, <strong><%= user.firstName %> <%= user.lastName %></strong></span>
+            <a href="/logout" class="btn btn-danger">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="welcome">
+            <h2>Bienvenue sur le portail des technologies</h2>
+            <p>Accédez aux documentations officielles des principales technologies</p>
+        </div>
+
+        <% Object.keys(applications).forEach(category => { %>
+        <div class="category-section">
+            <h2 class="category-title">📁 <%= category %></h2>
+            <div class="apps-grid">
+                <% applications[category].forEach(app => { %>
+                <div class="app-card">
+                    <h3><%= app.name %></h3>
+                    <p><%= app.description %></p>
+                    <span style="background: #e9ecef; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;">
+                        <%= app.technology %>
+                    </span>
+                    <br><br>
+                    <a href="<%= app.url %>" target="_blank" class="btn btn-primary">
+                        📚 Accéder
+                    </a>
+                </div>
+                <% }); %>
+            </div>
+        </div>
+        <% }); %>
+    </div>
+</body>
+</html>
