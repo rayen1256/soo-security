@@ -47,22 +47,23 @@
       }
     ]
   },
-  "clients": [
-    {
-      "clientId": "portal-app",
-      "name": "Portail d'Applications",
-      "enabled": true,
-      "protocol": "openid-connect",
-      "publicClient": true,
-      "redirectUris": [
-        "https://portal.localhost/*"
-      ],
-      "webOrigins": [
-        "https://portal.localhost"
-      ],
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false
-    }
-  ]
+ "clients": [
+  {
+    "clientId": "portal-app",
+    "name": "Portail d'Applications",
+    "enabled": true,
+    "protocol": "openid-connect",
+    "publicClient": true,
+    "redirectUris": [
+      "http://portal.localhost/*",
+      "http://portal.localhost/?auth_callback=1"
+    ],
+    "webOrigins": [
+      "http://portal.localhost"
+    ],
+    "standardFlowEnabled": true,
+    "implicitFlowEnabled": false,
+    "directAccessGrantsEnabled": false
+  }
+]
 }
